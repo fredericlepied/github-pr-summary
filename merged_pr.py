@@ -14,8 +14,8 @@ dotenv.load_dotenv()
 # Replace with your GitHub token
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 # Replace with the repository information
-OWNER = sys.argv[1]
-REPO = sys.argv[2]
+OWNER = os.getenv("GITHUB_ORG")
+REPO = os.getenv("GITHUB_PROJ")
 
 # Base URL for the GitHub API
 BASE_URL = "https://api.github.com"
