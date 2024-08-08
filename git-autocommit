@@ -3,6 +3,7 @@
 """Read a Github json file produced by pr2json.py, format it for a LLM to summarize it."""
 
 import os
+import sys
 
 import dotenv
 import openai
@@ -34,12 +35,15 @@ def create_commit_message(patch):
 if __name__ == "__main__":
     dotenv.load_dotenv()
 
-    # get the output of git diff --staged
-    pfile = os.popen("git diff --staged")
+    # if there is not parameters passed, get the output of git diff --staged
+    if len(sys.argv) == 1:
+        pfile = os.popen("git diff --staged")
+    else:
+        pfile = os.popen(f"git diff {' '.join(sys.argv[1:])}")
     data = pfile.read()
 
     summary = create_commit_message(data)
     print(summary)
 
     # commit the change
-    os.system(f'git commit -m "{summary}"')
+    os.system(f'git commit -m "{summary}" {" ".join(sys.argv[1:])}')
