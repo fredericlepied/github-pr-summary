@@ -25,3 +25,17 @@ $ for url in $(./merged_pr.py | jq -r .items.[].html_url); do
   ./json2summary.py $(./pr2json.py $url pr)
 done
 ```
+
+# git autocommit addon
+
+Use OpenAI to generate the commit message of a git change. Set the `EDITOR` environment variable in a `git-autocommit` script to be placed in your `PATH` like this:
+
+```bash
+#!/bin/bash
+
+SRCDIR=<path to where you extracted this repository>
+
+. $SRCDIR/.venv/bin/activate
+
+EDITOR=$SRCDIR/git-autocommit-editor git commit "$@"
+```
