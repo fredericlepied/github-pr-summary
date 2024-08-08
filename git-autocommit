@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+"""Read a Github json file produced by pr2json.py, format it for a LLM to summarize it."""
+
+import os
+
+import dotenv
+import openai
+
+
+def create_commit_message(patch):
+    prompt = f"Generate a concise git commit message that summarizes the key changes with a summary line with less than 50 characters and bullet points starting with `- `. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes. Code change:\n\n```{patch}```\n"
+
+    client = openai.OpenAI()
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+    )
+    message = chat_completion.choices[0].message.content.split("\n")
+    # remove first line and end line if they are ```
+    if message[0] == "```":
+        message = message[1:]
+    if message[-1] == "```":
+        message = message[:-1]
+    return "\n".join(message)
+
+
+if __name__ == "__main__":
+    dotenv.load_dotenv()
+
+    # get the output of git diff --staged
+    pfile = os.popen("git diff --staged")
+    data = pfile.read()
+
+    summary = create_commit_message(data)
+    print(summary)
+
+    # commit the change
+    os.system(f'git commit -m "{summary}"')
