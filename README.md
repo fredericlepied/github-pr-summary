@@ -7,6 +7,7 @@ GITHUB_TOKEN=<GitHub Token>
 OPENAI_API_KEY=<OPENAI API TOKEN>
 GITHUB_ORG=<your GitHub organization>
 GITHUB_PROJ=<your GitHub project>
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 To install the requirements:
