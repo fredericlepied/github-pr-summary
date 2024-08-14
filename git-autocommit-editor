@@ -12,7 +12,19 @@ import openai
 
 
 def create_commit_message(patch):
-    prompt = f"Generate a concise git commit message that summarizes the key changes with a summary line with less than 50 characters and bullet points starting with `- `. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes. Code change:\n\n```{patch}```\n"
+    prompt = f"""Generate a concise git commit message that summarizes the key changes with a summary line and bullet points starting with `- `. Stay high-level and combine smaller changes to overarching topics. Skip describing any reformatting changes.
+
+Use the following rules:
+
+1. Separate subject from body with a blank line
+2. Limit the subject line to 50 characters
+3. Capitalize the subject line
+4. Do not end the subject line with a period
+5. Use the imperative mood in the subject line
+6. Wrap the body at 72 characters
+7. Use the body to explain what and why vs. how
+
+Code change:\n\n```{patch}```\n"""
 
     client = openai.OpenAI()
 
