@@ -98,6 +98,22 @@ parser.add_argument(
     default=None,
 )
 
+# owner argument
+parser.add_argument(
+    "--owner",
+    dest="owner",
+    help="The owner to search for merged PRs from.",
+    default=OWNER,
+)
+
+# repo argument
+parser.add_argument(
+    "--repo",
+    dest="repo",
+    help="The repo to search for merged PRs from.",
+    default=REPO,
+)
+
 # Parse the arguments
 args = parser.parse_args()
 
@@ -121,7 +137,7 @@ else:
     users = None
 
 # Search for merged PRs since that date
-merged_prs = search_merged_prs(OWNER, REPO, since_date, to_date, users)
+merged_prs = search_merged_prs(args.owner, args.repo, since_date, to_date, users)
 
 # Save the data to a JSON file
 json.dump(merged_prs, sys.stdout, indent=4)
