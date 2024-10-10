@@ -40,6 +40,14 @@ $ for f in $(./print_complexity.py pr/*|sort -nr|./display_percent.py 20|cut -d 
 done
 ```
 
+## Gerrit changes
+
+```Shellsession
+$ for f in $(./gerrit_changes.py https://softwarefactory-project.io/r 'status:merged after:2024-07-01 before:2024-09-30' pr); do
+  ./json2summary.py $f
+done
+```
+
 # git autocommit addon
 
 Use OpenAI to generate the commit message of a git change. Set the `EDITOR` environment variable in a `git-autocommit` script to be placed in your `PATH` like this:

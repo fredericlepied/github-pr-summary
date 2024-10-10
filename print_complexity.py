@@ -13,13 +13,22 @@ def compute_complexity(pr_data):
     W_COMMITS = 0.15
     W_COMMENTS = 0.15
 
-    # Extract the data
-    details = pr_data["details"]
-    num_commits = details["commits"]
-    num_comments = details["comments"]
-    additions = details["additions"]
-    deletions = details["deletions"]
-    changed_files = details["changed_files"]
+    if "details" in pr_data:
+        # Extract the data
+        details = pr_data["details"]
+        num_commits = details["commits"]
+        num_comments = details["comments"]
+        additions = details["additions"]
+        deletions = details["deletions"]
+        changed_files = details["changed_files"]
+    else:
+        # extract gerrit data
+        num_commits = 1
+        num_comments = pr_data["total_comment_count"]
+        additions = pr_data["insertions"]
+        deletions = pr_data["deletions"]
+        current_revision = pr_data["current_revision"]
+        changed_files = len(pr_data["revisions"][current_revision]["files"])
 
     # Compute the score
     complexity_score = (
