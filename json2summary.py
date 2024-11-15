@@ -10,15 +10,20 @@ import dotenv
 import openai
 
 
+def return_prompt(title, description, code, url):
+    prompt = f'You are an experienced software developer. You will act as a reviewer for a GitHub Pull Request {url} titled "{title}" with the following description:\n"{description}"\n\nand code change:\n{code}\n\n.Please summarize the key changes from the title, description and code in a single sentence with this MarkDown format: [<title>](<url): <summary>. Do not use the words Pull Request in the summary. Do not reference the url in the title. Do not put the following characters in the title: `[]()|`.'
+
+    return prompt
+
+
 def create_prompt_from_github(data):
     # Combine title and description for context
     title = data["details"]["title"]
     description = data["details"]["body"]
     code = data["patch"][:150000]
     url = data["details"]["html_url"]
-    prompt = f'You are an experienced software developer. You will act as a reviewer for a GitHub Pull Request {url} titled "{title}" with the following description:\n"{description}"\n\nand code change:\n{code}\n\n.Please summarize the key changes from the title, description and code in a single sentence with this MarkDown format: [<title>](<url): <summary>. Do not use the words Pull Request in the summary. Do not reference the url in the title. Do not put the following characters in the title: `[]()|`.'
 
-    return prompt
+    return return_prompt(title, description, code, url)
 
 
 def create_prompt_from_gerrit(data):
@@ -27,9 +32,8 @@ def create_prompt_from_gerrit(data):
     description = data["description"]
     code = data["patch"][:150000]
     url = data["html_url"]
-    prompt = f'You are an experienced software developer. You will act as a reviewer for a GitHub Pull Request {url} titled "{title}" with the following description:\n"{description}"\n\nand code change:\n{code}\n\n.Please summarize the key changes from the title, description and code in a single sentence with this MarkDown format: [<title>](<url): <summary>. Do not use the words Pull Request in the summary. Do not reference the url in the title. Do not put the following characters in the title: `[]()|`.'
 
-    return prompt
+    return return_prompt(title, description, code, url)
 
 
 def create_summary(prompt):
