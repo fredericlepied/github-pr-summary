@@ -13,6 +13,31 @@ import dotenv
 import openai
 
 
+# Generated/lock files that bloat the diff without helping summarize the change.
+DEFAULT_EXCLUDES = [
+    "uv.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Cargo.lock",
+    "composer.lock",
+    "go.sum",
+    "Gemfile.lock",
+]
+
+
+def exclude_pathspecs():
+    """Build git pathspec arguments excluding generated/lock files.
+
+    Override the defaults with a comma-separated AUTOCOMMIT_EXCLUDE env var.
+    """
+    names = os.getenv("AUTOCOMMIT_EXCLUDE")
+    names = names.split(",") if names else DEFAULT_EXCLUDES
+    return [f":(exclude,glob)**/{name.strip()}" for name in names if name.strip()]
+
+
 def commit_scope(paths):
     if len(paths) == 1:
         return PurePosixPath(paths[0]).name
@@ -39,12 +64,22 @@ def prefix_subject(message, scope):
 
 def staged_paths():
     result = subprocess.run(
-        ["git", "diff", "--staged", "--name-only"],
+        ["git", "diff", "--staged", "--name-only", "--", *exclude_pathspecs()],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
     )
     return [line for line in result.stdout.splitlines() if line]
+
+
+def staged_diff():
+    result = subprocess.run(
+        ["git", "diff", "--staged", "--", *exclude_pathspecs()],
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    return result.stdout
 
 
 def create_commit_message(patch):
@@ -85,8 +120,7 @@ Code change:\n\n```{patch}```\n"""
 if __name__ == "__main__":
     dotenv.load_dotenv()
 
-    pfile = os.popen("git diff --staged")
-    data = pfile.read()
+    data = staged_diff()
 
     if data == "":
         print("No changes to commit")
