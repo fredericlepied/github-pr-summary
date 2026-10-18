@@ -5,10 +5,46 @@
 Extract the diff for the change, format it for a LLM to summarize it for a git commit message."""
 
 import os
+from pathlib import PurePosixPath
+import subprocess
 import sys
 
 import dotenv
 import openai
+
+
+def commit_scope(paths):
+    if len(paths) == 1:
+        return PurePosixPath(paths[0]).name
+
+    directories = [str(PurePosixPath(path).parent) for path in paths]
+    directory = os.path.commonpath(directories)
+    if directory not in ("", "."):
+        return directory
+
+    return None
+
+
+def prefix_subject(message, scope):
+    if not scope:
+        return message
+
+    lines = message.split("\n")
+    if not lines or lines[0].startswith(f"{scope}:"):
+        return message
+
+    lines[0] = f"{scope}: {lines[0]}"
+    return "\n".join(lines)
+
+
+def staged_paths():
+    result = subprocess.run(
+        ["git", "diff", "--staged", "--name-only"],
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    return [line for line in result.stdout.splitlines() if line]
 
 
 def create_commit_message(patch):
@@ -56,7 +92,7 @@ if __name__ == "__main__":
         print("No changes to commit")
         sys.exit(0)
 
-    summary = create_commit_message(data)
+    summary = prefix_subject(create_commit_message(data), commit_scope(staged_paths()))
     sys.stderr.write(f"\n\n{summary}\n")
     with open(sys.argv[1], "w") as f:
         f.write(summary)
