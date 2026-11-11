@@ -39,6 +39,9 @@ def exclude_pathspecs():
 
 
 def commit_scope(paths):
+    if not paths:
+        return None
+
     if len(paths) == 1:
         return PurePosixPath(paths[0]).name
 
@@ -62,9 +65,35 @@ def prefix_subject(message, scope):
     return "\n".join(lines)
 
 
+def diff_base():
+    """Compare an amended commit against its first parent (or an empty tree)."""
+    if os.getenv("AUTOCOMMIT_AMEND") != "1":
+        return []
+
+    parent = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD^"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    if parent.returncode == 0:
+        return [parent.stdout.strip()]
+
+    # A root commit has no parent. Compute the empty tree for this repo's
+    # object format, which also supports SHA-256 repositories.
+    empty_tree = subprocess.run(
+        ["git", "hash-object", "-t", "tree", "--stdin"],
+        input="",
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    return [empty_tree.stdout.strip()]
+
+
 def staged_paths():
     result = subprocess.run(
-        ["git", "diff", "--staged", "--name-only", "--", *exclude_pathspecs()],
+        ["git", "diff", "--staged", *diff_base(), "--name-only", "--", *exclude_pathspecs()],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
@@ -74,7 +103,7 @@ def staged_paths():
 
 def staged_diff():
     result = subprocess.run(
-        ["git", "diff", "--staged", "--", *exclude_pathspecs()],
+        ["git", "diff", "--staged", *diff_base(), "--", *exclude_pathspecs()],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
@@ -84,7 +113,7 @@ def staged_diff():
 
 def staged_stat():
     result = subprocess.run(
-        ["git", "diff", "--staged", "--stat", "--", *exclude_pathspecs()],
+        ["git", "diff", "--staged", *diff_base(), "--stat", "--", *exclude_pathspecs()],
         check=True,
         stdout=subprocess.PIPE,
         text=True,
